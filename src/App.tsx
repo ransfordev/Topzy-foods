@@ -16,6 +16,7 @@ import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 import OrdersPanel from "./components/OrdersPanel";
 import AdminDashboard from "./components/AdminDashboard";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 
 import { db, auth } from "./firebase";
 import {
@@ -557,6 +558,9 @@ export default function App() {
             isOpen={isAuthModalOpen}
             onClose={() => setIsAuthModalOpen(false)}
           />
+
+          {/* Progressive Web App Install Toast Prompt */}
+          <PWAInstallPrompt />
 
           {/* Personal Orders Logs Drawer Panel */}
           <OrdersPanel
