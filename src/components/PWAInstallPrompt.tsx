@@ -16,6 +16,8 @@ export default function PWAInstallPrompt() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    let showPromptTimer: ReturnType<typeof setTimeout> | undefined;
+
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
@@ -26,14 +28,19 @@ export default function PWAInstallPrompt() {
       const isDismissed = sessionStorage.getItem("topzy-pwa-prompt-dismissed");
       if (!isDismissed) {
         // Show after a brief delay for a better user experience
-        const timer = setTimeout(() => {
+        showPromptTimer = setTimeout(() => {
           setIsVisible(true);
         }, 3000);
-        return () => clearTimeout(timer);
       }
     };
 
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsVisible(false);
+    };
+
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     // Detect if the app is already launched in standalone (installed) mode
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches || 
@@ -44,7 +51,9 @@ export default function PWAInstallPrompt() {
     }
 
     return () => {
+      if (showPromptTimer) clearTimeout(showPromptTimer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
