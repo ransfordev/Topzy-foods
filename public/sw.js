@@ -1,10 +1,11 @@
-const CACHE_NAME = "topzy-foods-v1";
+const CACHE_NAME = "topzy-foods-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/icon-192.jpg",
-  "/icon-512.jpg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
   "/favicon.ico",
   "/favicon.png"
 ];
@@ -43,6 +44,21 @@ self.addEventListener("fetch", (event) => {
     event.request.url.includes("/api/") ||
     event.request.method !== "GET"
   ) {
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put("/index.html", responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() => caches.match("/index.html"))
+    );
     return;
   }
 
