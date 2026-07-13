@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Mail, Lock, User as UserIcon, Sparkles, LogIn, Key, ShieldAlert } from "lucide-react";
+import { X, Mail, Lock, User as UserIcon, LogIn } from "lucide-react";
 import { auth, googleProvider, signInWithPopup } from "../firebase";
 import {
   signInWithEmailAndPassword,
@@ -11,22 +11,19 @@ import {
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess?: (user: any) => void;
 }
 
-export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showSandboxFallback, setShowSandboxFallback] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setShowSandboxFallback(false);
     setLoading(true);
 
     try {
@@ -35,55 +32,32 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
         await updateProfile(userCredential.user, {
           displayName: displayName || email.split("@")[0],
         });
-        if (onLoginSuccess) {
-          onLoginSuccess(userCredential.user);
-        }
       } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        if (onLoginSuccess) {
-          onLoginSuccess(userCredential.user);
-        }
+        await signInWithEmailAndPassword(auth, email, password);
       }
       onClose();
     } catch (err: any) {
       console.error("Auth error:", err);
-      setShowSandboxFallback(true);
       if (
         err.code === "auth/user-not-found" ||
         err.code === "auth/wrong-password" ||
         err.code === "auth/invalid-credential"
       ) {
-        setError("Invalid email or password combination. If this account is not registered yet on your Firebase project, switch to 'Create Account' above to sign up first, or use the Sandbox Bypass below.");
+        setError("Invalid email or password combination. If you do not have an account yet, please click 'Need an account? Sign Up' below to register.");
       } else if (err.code === "auth/email-already-in-use") {
-        setError("This email address is already in use. Try signing in instead, or bypass with Sandbox Mode.");
+        setError("This email address is already in use. Try signing in instead.");
       } else if (err.code === "auth/weak-password") {
         setError("Password must be at least 6 characters.");
       } else if (err.code === "auth/operation-not-allowed") {
         setError(
-          "Email/Password authentication is not enabled in your Firebase project. Please go to your Firebase Console -> Authentication -> Sign-in Method, and enable the 'Email/Password' provider, or use Sandbox Mode below."
+          "Email/Password authentication is not enabled in your Firebase project. Please go to your Firebase Console -> Authentication -> Sign-in Method, and enable the 'Email/Password' provider."
         );
       } else {
-        setError(err.message || "An authentication error occurred. Please try again or use the Sandbox Bypass.");
+        setError(err.message || "An authentication error occurred. Please try again.");
       }
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSandboxBypass = () => {
-    if (!email) {
-      setError("Please specify an email address first to launch Sandbox Mode.");
-      return;
-    }
-    const mockUser = {
-      uid: "sandbox-uid-" + Math.random().toString(36).substring(2, 9),
-      email: email,
-      displayName: displayName || email.split("@")[0],
-    };
-    if (onLoginSuccess) {
-      onLoginSuccess(mockUser);
-    }
-    onClose();
   };
 
   const handleGoogleSignIn = async () => {
@@ -98,13 +72,13 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
       const errorMessage = err.message || "";
       
       if (errorCode === "auth/popup-closed-by-user" || errorMessage.includes("popup-closed-by-user") || errorMessage.includes("popup_closed_by_user")) {
-        setError("Sign-in popup was closed. If your browser blocked the popup, please enable popups for this site or use the standard Email/Password form above.");
+        setError("Sign-in popup was closed. If your browser blocked the popup, please allow popups for this site.");
       } else if (errorCode === "auth/user-cancelled" || errorMessage.includes("user-cancelled") || errorMessage.includes("denied")) {
-        setError("Sign-in was cancelled or access was denied. Please try again or use the Email/Password sign-in options above.");
+        setError("Sign-in was cancelled. Please try again.");
       } else if (errorCode === "auth/popup-blocked" || errorMessage.includes("popup-blocked")) {
         setError("The Google Sign-In popup was blocked by your browser. Please allow popups or use the Email/Password fields to log in.");
       } else {
-        setError(errorMessage || "Failed to sign in with Google. Please try again or use Email/Password sign-in.");
+        setError(errorMessage || "Failed to sign in with Google. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -152,20 +126,8 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModal
             </div>
 
             {error && (
-              <div className="space-y-2">
-                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
-                  {error}
-                </div>
-                {showSandboxFallback && (
-                  <button
-                    type="button"
-                    onClick={handleSandboxBypass}
-                    className="w-full py-3 bg-brand-gold hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Bypass Auth & Enter Sandbox Mode</span>
-                  </button>
-                )}
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
+                {error}
               </div>
             )}
 

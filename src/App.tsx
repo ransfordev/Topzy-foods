@@ -53,26 +53,9 @@ export default function App() {
   const [view, setView] = useState<"user" | "admin">("user");
 
   // Auth & Admin state
-  const [currentUser, setCurrentUser] = useState<any>(() => {
-    const saved = localStorage.getItem("topzy-mock-user");
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    const saved = localStorage.getItem("topzy-mock-user");
-    if (saved) {
-      const user = JSON.parse(saved);
-      return user.email === "admin@topzyfoods.com" || user.email === "ransfordnana001@gmail.com" || user.email === "callmimichelle@gmail.com" || user.email?.endsWith("@topzyfoods.com");
-    }
-    return false;
-  });
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(() => {
-    const saved = localStorage.getItem("topzy-mock-user");
-    if (saved) {
-      const user = JSON.parse(saved);
-      return user.email === "admin@topzyfoods.com" || user.email === "ransfordnana001@gmail.com" || user.email === "callmimichelle@gmail.com";
-    }
-    return false;
-  });
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
 
@@ -114,54 +97,46 @@ export default function App() {
   // 4. Firebase Authentication state change listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      const savedMock = localStorage.getItem("topzy-mock-user");
-      let activeUser = user;
-      if (!user && savedMock) {
-        activeUser = JSON.parse(savedMock);
-      }
-
-      setCurrentUser(activeUser);
-      if (activeUser) {
+      setCurrentUser(user);
+      if (user) {
         // Superadmin credentials added directly from Authentication tab
-        const hasSuperadminEmail = activeUser.email === "admin@topzyfoods.com" || 
-                                   activeUser.email === "ransfordnana001@gmail.com" || 
-                                   activeUser.email === "callmimichelle@gmail.com";
+        const hasSuperadminEmail = user.email === "admin@topzyfoods.com" || 
+                                   user.email === "ransfordnana001@gmail.com" || 
+                                   user.email === "callmimichelle@gmail.com";
         setIsSuperAdmin(hasSuperadminEmail);
 
         // Check if user has "isAdmin" field in the Firestore "users" collection
         let isDbAdmin = false;
         try {
-          if (activeUser.uid && !activeUser.uid.startsWith("sandbox-uid-")) {
-            const userDocRef = doc(db, "users", activeUser.uid);
-            const { getDoc } = await import("firebase/firestore");
-            const userSnap = await getDoc(userDocRef);
-            
-            if (userSnap.exists()) {
-              const userData = userSnap.data();
-              if (userData && userData.isAdmin === true) {
-                isDbAdmin = true;
-              }
-            } else {
-              // Create user document with default isAdmin field
-              await setDoc(userDocRef, {
-                uid: activeUser.uid,
-                email: activeUser.email,
-                displayName: activeUser.displayName || activeUser.email?.split("@")[0] || "Valued Customer",
-                photoURL: activeUser.photoURL || null,
-                isAdmin: hasSuperadminEmail,
-                createdAt: new Date().toISOString(),
-              }, { merge: true });
-              if (hasSuperadminEmail) {
-                isDbAdmin = true;
-              }
+          const userDocRef = doc(db, "users", user.uid);
+          const { getDoc } = await import("firebase/firestore");
+          const userSnap = await getDoc(userDocRef);
+          
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (userData && userData.isAdmin === true) {
+              isDbAdmin = true;
+            }
+          } else {
+            // Create user document with default isAdmin field
+            await setDoc(userDocRef, {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName || user.email?.split("@")[0] || "Valued Customer",
+              photoURL: user.photoURL || null,
+              isAdmin: hasSuperadminEmail,
+              createdAt: new Date().toISOString(),
+            }, { merge: true });
+            if (hasSuperadminEmail) {
+              isDbAdmin = true;
             }
           }
         } catch (e) {
           console.error("Error reading or writing user doc in users collection:", e);
         }
 
-        const isDemoAdmin = activeUser.email === "admin@topzyfoods.com" || activeUser.email === "ransfordnana001@gmail.com";
-        const isDomainAdmin = activeUser.email?.endsWith("@topzyfoods.com") || false;
+        const isDemoAdmin = user.email === "admin@topzyfoods.com" || user.email === "ransfordnana001@gmail.com";
+        const isDomainAdmin = user.email?.endsWith("@topzyfoods.com") || false;
         setIsAdmin(isDbAdmin || isDemoAdmin || isDomainAdmin || hasSuperadminEmail);
       } else {
         setIsAdmin(false);
@@ -581,12 +556,6 @@ export default function App() {
           <AuthModal
             isOpen={isAuthModalOpen}
             onClose={() => setIsAuthModalOpen(false)}
-            onLoginSuccess={(user) => {
-              setCurrentUser(user);
-              localStorage.setItem("topzy-mock-user", JSON.stringify(user));
-              const isDemoAdmin = user.email === "admin@topzyfoods.com" || user.email === "ransfordnana001@gmail.com";
-              setIsAdmin(isDemoAdmin || user.email?.endsWith("@topzyfoods.com") || false);
-            }}
           />
 
           {/* Personal Orders Logs Drawer Panel */}
