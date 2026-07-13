@@ -1,4 +1,4 @@
-const CACHE_NAME = "topzy-foods-v1";
+const CACHE_NAME = "topzy-foods-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/index.html",
