@@ -1,0 +1,6 @@
+{
+  "name": "Topzy Foods",
+  "description": "Premium restaurant website for Topzy Foods in Kumasi, Ghana featuring a detailed menu, delivery calculator, and a high-thinking AI culinary assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "A food item available on the general menu",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "special": { "type": "boolean" }
+      },
+      "required": ["id", "name", "price", "category"]
+    },
+    "DailySpecial": {
+      "title": "Daily Special",
+      "description": "A daily promotional item or combination deal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "tag": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "tag"]
+    },
+    "Order": {
+      "title": "Customer Order",
+      "description": "An order submitted by a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhone": { "type": "string" },
+        "location": { "type": "string" },
+        "notes": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "deliveryFee": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userName", "userPhone", "location", "items", "grandTotal", "status"]
+    },
+    "AdminUser": {
+      "title": "Admin User",
+      "description": "Users authorized to access the admin panel",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/menuItems/{itemId}": {
+      "schema": "MenuItem",
+      "description": "Collection of available gourmet dishes"
+    },
+    "/specials/{specialId}": {
+      "schema": "DailySpecial",
+      "description": "Collection of active promotional offers"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of customer food orders"
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminUser",
+      "description": "Collection of authorized admin users"
+    }
+  }
+}
